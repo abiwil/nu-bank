@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+}
+
+model User {
+  id String @id @default(uuid())
+  email String @unique
+  passwordHash String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  accounts Account[]
+
+}
+
+model Account {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  accountNumber String @unique @db.Char(8)
+  balance Decimal @default(0) @db.Decimal(12,2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  transactions Transaction[]
+
+  @@index([userId])
+}
+
+model Transaction {
+  id String @id @default(uuid())
+  accountId String
+  account Account @relation(fields: [accountId], references: [id])
+  counterpartyAccountNumber String? @db.Char(8)
+  amount Decimal @db.Decimal(12,2)
+  reference String?
+  type TransactionType
+  createdAt DateTime @default(now())
+
+  @@index([accountId, createdAt])
+
+}
