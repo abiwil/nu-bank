@@ -6,7 +6,7 @@ Next.js (React) frontend using shadcn components, Node/TypeScript API routes, Po
 
 ### Running locally
 
-Prerequisites: Node.js 20+, npm, Docker.
+Prerequisites: Node.js (version pinned in `.nvmrc`, currently 24; run `nvm use`), npm, Docker.
 
 ```bash
 cp .env.example .env
