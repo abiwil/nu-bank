@@ -1,21 +1,20 @@
 import { redirect } from "next/navigation"
-import {
-  ArrowDownToLineIcon,
-  ArrowUpFromLineIcon,
-  ReceiptIcon,
-} from "lucide-react"
+import { ReceiptIcon } from "lucide-react"
 import { cn } from "cn"
 
 import { prisma } from "@/lib/prisma"
 import { getCurrentUser } from "@/lib/session"
 import { TransactionType } from "@/lib/generated/prisma/enums"
 import { formatCurrency, formatDate, formatSignedCurrency } from "@/lib/format"
+import { AccountSwitcher } from "@/components/account-switcher"
 import { AmountDialog } from "@/components/amount-dialog"
+import { AmountDialogType } from "@/components/types/amount-dialog"
 import { LogoutButton } from "@/components/logout-button"
 import { TransferDialog } from "@/components/transfer-dialog"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
@@ -46,25 +45,33 @@ const TRANSACTION_LABELS: Record<TransactionType, string> = {
 
 const RECENT_TRANSACTIONS_LIMIT = 10
 
-export default async function AccountPage() {
+export default async function AccountPage({
+  searchParams,
+}: PageProps<"/account">) {
   const user = await getCurrentUser()
   if (!user) {
     redirect("/login")
   }
 
-  const account = await prisma.account.findFirst({
+  const accounts = await prisma.account.findMany({
     where: { userId: user.id },
-    include: {
-      transactions: {
-        orderBy: { createdAt: "desc" },
-        take: RECENT_TRANSACTIONS_LIMIT,
-      },
-    },
+    orderBy: { createdAt: "asc" },
   })
 
-  if (!account) {
+  if (accounts.length === 0) {
     redirect("/login")
   }
+
+  const { account: requestedAccountNumber } = await searchParams
+  const account =
+    accounts.find((a) => a.accountNumber === requestedAccountNumber) ??
+    accounts[0]
+
+  const transactions = await prisma.transaction.findMany({
+    where: { accountId: account.id },
+    orderBy: { createdAt: "desc" },
+    take: RECENT_TRANSACTIONS_LIMIT,
+  })
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 p-6 md:p-10">
@@ -84,6 +91,14 @@ export default async function AccountPage() {
           <CardTitle className="text-4xl font-semibold tabular-nums">
             {formatCurrency(account.balance.toNumber())}
           </CardTitle>
+          {accounts.length > 1 && (
+            <CardAction>
+              <AccountSwitcher
+                accountNumbers={accounts.map((a) => a.accountNumber)}
+                selectedAccountNumber={account.accountNumber}
+              />
+            </CardAction>
+          )}
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
@@ -93,21 +108,15 @@ export default async function AccountPage() {
         <CardFooter className="flex flex-wrap gap-2">
           <AmountDialog
             id="deposit"
-            triggerIcon={<ArrowDownToLineIcon data-icon="inline-start" />}
-            triggerLabel="Deposit"
-            title="Deposit funds"
-            description="Add money to your account."
-            submitLabel="Deposit"
+            type={AmountDialogType.DEPOSIT}
+            accountNumber={account.accountNumber}
           />
           <AmountDialog
             id="withdraw"
-            triggerIcon={<ArrowUpFromLineIcon data-icon="inline-start" />}
-            triggerLabel="Withdraw"
-            title="Withdraw funds"
-            description="Move money out of your account."
-            submitLabel="Withdraw"
+            type={AmountDialogType.WITHDRAWAL}
+            accountNumber={account.accountNumber}
           />
-          <TransferDialog />
+          <TransferDialog senderAccountNumber={account.accountNumber} />
         </CardFooter>
       </Card>
 
@@ -116,14 +125,14 @@ export default async function AccountPage() {
           <CardTitle>Recent transactions</CardTitle>
           <CardDescription>
             Your{" "}
-            {account.transactions.length === RECENT_TRANSACTIONS_LIMIT
+            {transactions.length === RECENT_TRANSACTIONS_LIMIT
               ? `${RECENT_TRANSACTIONS_LIMIT} most recent`
               : "recent"}{" "}
             transactions
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {account.transactions.length === 0 ? (
+          {transactions.length === 0 ? (
             <Empty>
               <EmptyHeader>
                 <EmptyMedia variant="icon">
@@ -146,7 +155,7 @@ export default async function AccountPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {account.transactions.map((transaction) => {
+                {transactions.map((transaction) => {
                   const amount = transaction.amount.toNumber()
                   return (
                     <TableRow key={transaction.id}>
