@@ -34,8 +34,8 @@ async function main() {
           },
         },
         include: { accounts: true },
-      })
-    )
+      }),
+    ),
   );
 
   const [aliceAccount, aliceSavingsAccount] = alice.accounts;

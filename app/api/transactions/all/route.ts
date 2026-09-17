@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   if (limitParam && (!Number.isInteger(limit) || limit! <= 0)) {
     return Response.json(
       { error: "limit must be a positive integer" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -24,6 +24,6 @@ export async function GET(req: Request) {
     });
     return Response.json(transactions);
   } catch {
-    return new Response('Error fetching transactions', { status: 500 });
+    return new Response("Error fetching transactions", { status: 500 });
   }
 }

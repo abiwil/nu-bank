@@ -1,22 +1,25 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { LogOutIcon } from "lucide-react"
-import { cn } from "cn"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { LogOutIcon } from "lucide-react";
+import { cn } from "cn";
 
-import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
-export function LogoutButton({ className, ...props }: React.ComponentProps<typeof Button>) {
-  const router = useRouter()
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
+export function LogoutButton({
+  className,
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   async function handleLogout() {
-    setIsLoggingOut(true)
-    await fetch("/api/logout", { method: "POST" })
-    router.push("/login")
-    router.refresh()
+    setIsLoggingOut(true);
+    await fetch("/api/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
   }
 
   return (
@@ -35,5 +38,5 @@ export function LogoutButton({ className, ...props }: React.ComponentProps<typeo
       )}
       {isLoggingOut ? "Logging out..." : "Log out"}
     </Button>
-  )
+  );
 }

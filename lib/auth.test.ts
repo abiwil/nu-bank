@@ -10,7 +10,9 @@ describe("hashPassword / verifyPassword", () => {
 
   it("verifies a matching password against its hash", async () => {
     const hash = await hashPassword("correcthorsebatterystaple");
-    await expect(verifyPassword("correcthorsebatterystaple", hash)).resolves.toBe(true);
+    await expect(
+      verifyPassword("correcthorsebatterystaple", hash),
+    ).resolves.toBe(true);
   });
 
   it("rejects a non-matching password", async () => {

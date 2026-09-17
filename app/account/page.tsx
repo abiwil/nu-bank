@@ -1,17 +1,17 @@
-import { redirect } from "next/navigation"
-import { ReceiptIcon } from "lucide-react"
-import { cn } from "cn"
+import { redirect } from "next/navigation";
+import { ReceiptIcon } from "lucide-react";
+import { cn } from "cn";
 
-import { prisma } from "@/lib/prisma"
-import { getCurrentUser } from "@/lib/session"
-import { TransactionType } from "@/lib/generated/prisma/enums"
-import { formatCurrency, formatDate, formatSignedCurrency } from "@/lib/format"
-import { AccountSwitcher } from "@/components/account-switcher"
-import { AmountDialog } from "@/components/amount-dialog"
-import { AmountDialogType } from "@/components/types/amount-dialog"
-import { LogoutButton } from "@/components/logout-button"
-import { TransferDialog } from "@/components/transfer-dialog"
-import { Badge } from "@/components/ui/badge"
+import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/session";
+import { TransactionType } from "@/lib/generated/prisma/enums";
+import { formatCurrency, formatDate, formatSignedCurrency } from "@/lib/format";
+import { AccountSwitcher } from "@/components/account-switcher";
+import { AmountDialog } from "@/components/amount-dialog";
+import { AmountDialogType } from "@/components/types/amount-dialog";
+import { LogoutButton } from "@/components/logout-button";
+import { TransferDialog } from "@/components/transfer-dialog";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardAction,
@@ -20,14 +20,14 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty"
+} from "@/components/ui/empty";
 import {
   Table,
   TableBody,
@@ -35,51 +35,49 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 
 const TRANSACTION_LABELS: Record<TransactionType, string> = {
   DEPOSIT: "Deposit",
   WITHDRAWAL: "Withdrawal",
   TRANSFER: "Transfer",
-}
+};
 
-const RECENT_TRANSACTIONS_LIMIT = 10
+const RECENT_TRANSACTIONS_LIMIT = 10;
 
 export default async function AccountPage({
   searchParams,
 }: PageProps<"/account">) {
-  const user = await getCurrentUser()
+  const user = await getCurrentUser();
   if (!user) {
-    redirect("/login")
+    redirect("/login");
   }
 
   const accounts = await prisma.account.findMany({
     where: { userId: user.id },
     orderBy: { createdAt: "asc" },
-  })
+  });
 
   if (accounts.length === 0) {
-    redirect("/login")
+    redirect("/login");
   }
 
-  const { account: requestedAccountNumber } = await searchParams
+  const { account: requestedAccountNumber } = await searchParams;
   const account =
     accounts.find((a) => a.accountNumber === requestedAccountNumber) ??
-    accounts[0]
+    accounts[0];
 
   const transactions = await prisma.transaction.findMany({
     where: { accountId: account.id },
     orderBy: { createdAt: "desc" },
     take: RECENT_TRANSACTIONS_LIMIT,
-  })
+  });
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 p-6 md:p-10">
       <header className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">
-            Welcome back
-          </h1>
+          <h1 className="text-xl font-semibold tracking-tight">Welcome back</h1>
           <p className="text-sm text-muted-foreground">{user.email}</p>
         </div>
         <LogoutButton />
@@ -156,7 +154,7 @@ export default async function AccountPage({
               </TableHeader>
               <TableBody>
                 {transactions.map((transaction) => {
-                  const amount = transaction.amount.toNumber()
+                  const amount = transaction.amount.toNumber();
                   return (
                     <TableRow key={transaction.id}>
                       <TableCell className="text-muted-foreground">
@@ -180,13 +178,13 @@ export default async function AccountPage({
                       <TableCell
                         className={cn(
                           "text-right font-medium tabular-nums",
-                          amount < 0 ? "text-destructive" : "text-primary"
+                          amount < 0 ? "text-destructive" : "text-primary",
                         )}
                       >
                         {formatSignedCurrency(amount)}
                       </TableCell>
                     </TableRow>
-                  )
+                  );
                 })}
               </TableBody>
             </Table>
@@ -194,5 +192,5 @@ export default async function AccountPage({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

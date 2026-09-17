@@ -1,0 +1,14 @@
+.next
+node_modules
+out
+build
+next-env.d.ts
+lib/generated
+package-lock.json
+tsconfig.tsbuildinfo
+
+# Skill files synced from external sources (see skills-lock.json) - not project source
+.agents
+.claude
+.cursor
+.devin

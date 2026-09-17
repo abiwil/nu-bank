@@ -57,20 +57,20 @@ describe("POST /api/transactions/withdraw", () => {
     "rejects a non-positive amount (%s)",
     async (amount) => {
       const res = await POST(
-        withdrawRequest({ amount, accountNumber: "12345678" })
+        withdrawRequest({ amount, accountNumber: "12345678" }),
       );
       const body = await res.json();
 
       expect(res.status).toBe(400);
       expect(body.error).toBe("Amount must be greater than 0");
-    }
+    },
   );
 
   it("returns 404 when the account doesn't belong to the user", async () => {
     vi.mocked(verifyUserAccountNumber).mockResolvedValue(null);
 
     const res = await POST(
-      withdrawRequest({ amount: 10, accountNumber: "12345678" })
+      withdrawRequest({ amount: 10, accountNumber: "12345678" }),
     );
     const body = await res.json();
 
@@ -86,7 +86,7 @@ describe("POST /api/transactions/withdraw", () => {
     } as never);
 
     const res = await POST(
-      withdrawRequest({ amount: 25, accountNumber: "12345678" })
+      withdrawRequest({ amount: 25, accountNumber: "12345678" }),
     );
     const body = await res.json();
 
@@ -103,7 +103,11 @@ describe("POST /api/transactions/withdraw", () => {
     vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
 
     const res = await POST(
-      withdrawRequest({ amount: 25, reference: "Rent", accountNumber: "12345678" })
+      withdrawRequest({
+        amount: 25,
+        reference: "Rent",
+        accountNumber: "12345678",
+      }),
     );
     const body = await res.json();
 
@@ -144,10 +148,12 @@ describe("POST /api/transactions/withdraw", () => {
       balance: 100,
     } as never);
     vi.mocked(prisma.$transaction).mockRejectedValue(dbError);
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
 
     const res = await POST(
-      withdrawRequest({ amount: 25, accountNumber: "12345678" })
+      withdrawRequest({ amount: 25, accountNumber: "12345678" }),
     );
     const body = await res.json();
 
@@ -155,7 +161,7 @@ describe("POST /api/transactions/withdraw", () => {
     expect(body.error).toBe("Could not process withdrawal");
     expect(consoleError).toHaveBeenCalledWith(
       "Failed to process withdrawal",
-      dbError
+      dbError,
     );
 
     consoleError.mockRestore();

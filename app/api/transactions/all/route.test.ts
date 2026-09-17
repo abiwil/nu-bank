@@ -38,7 +38,7 @@ describe("GET /api/transactions/all", () => {
     } as never);
     const transactions = [{ id: "txn-1" }, { id: "txn-2" }];
     vi.mocked(prisma.transaction.findMany).mockResolvedValue(
-      transactions as never
+      transactions as never,
     );
 
     const res = await GET(makeRequest());
@@ -75,7 +75,7 @@ describe("GET /api/transactions/all", () => {
     } as never);
 
     const res = await GET(
-      makeRequest("http://localhost/api/transactions/all?limit=abc")
+      makeRequest("http://localhost/api/transactions/all?limit=abc"),
     );
 
     expect(res.status).toBe(400);
@@ -88,7 +88,7 @@ describe("GET /api/transactions/all", () => {
       email: "a@b.com",
     } as never);
     vi.mocked(prisma.transaction.findMany).mockRejectedValue(
-      new Error("db down")
+      new Error("db down"),
     );
 
     const res = await GET(makeRequest());

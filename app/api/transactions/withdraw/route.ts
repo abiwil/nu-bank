@@ -4,7 +4,6 @@ import { TransactionType } from "../../../../lib/generated/prisma/enums";
 import { verifyUserAccountNumber } from "../helpers";
 
 export async function POST(req: Request) {
-
   const user = await getCurrentUser();
   if (!user) {
     return new Response("Unauthorized", { status: 401 });
@@ -12,33 +11,30 @@ export async function POST(req: Request) {
 
   const { amount, reference, accountNumber } = await req.json();
 
-  if(!accountNumber) {
+  if (!accountNumber) {
+    return Response.json({ error: "No account selected" }, { status: 400 });
+  }
+
+  if (!amount || amount <= 0) {
     return Response.json(
-      { error: "No account selected" },
-      { status: 400 }
+      { error: "Amount must be greater than 0" },
+      { status: 400 },
     );
   }
 
-  if(!amount || amount <= 0) {
-    return Response.json(
-      { error: "Amount must be greater than 0"},
-      {status: 400 }
-    )
-  }
+  const account = await verifyUserAccountNumber(accountNumber, user.id);
 
-  const account = await verifyUserAccountNumber(accountNumber, user.id)
-
-  if(!account) {
+  if (!account) {
     return Response.json(
       { error: "No account found for user" },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
-  if(amount > account.balance) {
+  if (amount > account.balance) {
     return Response.json(
       { error: "Not enough funds to complete withdrawal" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -58,12 +54,12 @@ export async function POST(req: Request) {
       }),
     ]);
 
-    return Response.json({status: 200})
+    return Response.json({ status: 200 });
   } catch (error) {
     console.error("Failed to process withdrawal", error);
     return Response.json(
       { error: "Could not process withdrawal" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

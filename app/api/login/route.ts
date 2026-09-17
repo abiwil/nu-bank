@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   if (!email || !password) {
     return Response.json(
       { error: "Email and password are required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
     return Response.json(
       { error: "Invalid email or password" },
-      { status: 401 }
+      { status: 401 },
     );
   }
 
@@ -25,6 +25,6 @@ export async function POST(req: Request) {
 
   return Response.json(
     { user: { id: user.id, email: user.email } },
-    { status: 200 }
+    { status: 200 },
   );
 }

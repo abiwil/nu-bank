@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { ArrowLeftRightIcon } from "lucide-react"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeftRightIcon } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -14,48 +14,53 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/dialog";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
   InputGroupText,
-} from "@/components/ui/input-group"
+} from "@/components/ui/input-group";
 
 type TransferDialogProps = {
-  senderAccountNumber: string
-}
+  senderAccountNumber: string;
+};
 
 export function TransferDialog({ senderAccountNumber }: TransferDialogProps) {
-  const router = useRouter()
-  const [open, setOpen] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string|null>(null)
-  const [recipient, setRecipient] = useState("")
-  const [amount, setAmount] = useState("")
-  const [reference, setReference] = useState("")
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [recipient, setRecipient] = useState("");
+  const [amount, setAmount] = useState("");
+  const [reference, setReference] = useState("");
 
   function handleOpenChange(next: boolean) {
-    setOpen(next)
+    setOpen(next);
     if (!next) {
-      setRecipient("")
-      setAmount("")
-      setReference("")
+      setRecipient("");
+      setAmount("");
+      setReference("");
     }
   }
 
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
 
     if (recipient === senderAccountNumber) {
-      setError("Oops you can't transfer money to your own account!")
-      return
+      setError("Oops you can't transfer money to your own account!");
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
       const res = await fetch("/api/transactions/transfer", {
@@ -67,18 +72,18 @@ export function TransferDialog({ senderAccountNumber }: TransferDialogProps) {
           senderAccountNumber,
           recipientAccountNumber: recipient,
         }),
-      })
+      });
       if (!res.ok) {
-        const data = await res.json().catch(() => null)
-        setError(data?.error ?? "Something went wrong")
-        return
+        const data = await res.json().catch(() => null);
+        setError(data?.error ?? "Something went wrong");
+        return;
       }
-      handleOpenChange(false)
-      router.refresh()
+      handleOpenChange(false);
+      router.refresh();
     } catch {
-      setError("Something went wrong")
+      setError("Something went wrong");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
@@ -131,7 +136,8 @@ export function TransferDialog({ senderAccountNumber }: TransferDialogProps) {
             </Field>
             <Field>
               <FieldLabel htmlFor="transfer-reference">
-                Reference <span className="text-muted-foreground">(optional)</span>
+                Reference{" "}
+                <span className="text-muted-foreground">(optional)</span>
               </FieldLabel>
               <Input
                 id="transfer-reference"
@@ -146,10 +152,12 @@ export function TransferDialog({ senderAccountNumber }: TransferDialogProps) {
             <DialogClose render={<Button variant="outline" type="button" />}>
               Cancel
             </DialogClose>
-            <Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Transferring" : "Transfer"}</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Transferring" : "Transfer"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

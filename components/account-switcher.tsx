@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useRouter } from "next/navigation"
+import { useRouter } from "next/navigation";
 
 import {
   Select,
@@ -9,18 +9,18 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 
 type AccountSwitcherProps = {
-  accountNumbers: string[]
-  selectedAccountNumber: string
-}
+  accountNumbers: string[];
+  selectedAccountNumber: string;
+};
 
 export function AccountSwitcher({
   accountNumbers,
   selectedAccountNumber,
 }: AccountSwitcherProps) {
-  const router = useRouter()
+  const router = useRouter();
 
   return (
     <Select
@@ -40,5 +40,5 @@ export function AccountSwitcher({
         </SelectGroup>
       </SelectContent>
     </Select>
-  )
+  );
 }

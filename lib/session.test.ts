@@ -23,7 +23,7 @@ function fakeCookieStore() {
   const store = new Map<string, string>();
   return {
     get: vi.fn((name: string) =>
-      store.has(name) ? { value: store.get(name)! } : undefined
+      store.has(name) ? { value: store.get(name)! } : undefined,
     ),
     set: vi.fn((name: string, value: string) => {
       store.set(name, value);
@@ -41,7 +41,7 @@ describe("session helpers", () => {
     vi.clearAllMocks();
     cookieStore = fakeCookieStore();
     vi.mocked(cookies).mockResolvedValue(
-      cookieStore as unknown as Awaited<ReturnType<typeof cookies>>
+      cookieStore as unknown as Awaited<ReturnType<typeof cookies>>,
     );
   });
 
@@ -75,7 +75,7 @@ describe("session helpers", () => {
           sameSite: "lax",
           path: "/",
           expires: expiresAt,
-        })
+        }),
       );
     });
 
@@ -134,7 +134,8 @@ describe("session helpers", () => {
 
       await verifySession();
 
-      const { where } = vi.mocked(prisma.session.findUnique).mock.calls[0][0] as {
+      const { where } = vi.mocked(prisma.session.findUnique).mock
+        .calls[0][0] as {
         where: { tokenHash: string };
       };
       expect(where.tokenHash).not.toBe("raw-token");

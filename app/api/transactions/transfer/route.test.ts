@@ -17,10 +17,7 @@ vi.mock("../helpers", () => ({
 
 import { prisma } from "../../../../lib/prisma";
 import { getCurrentUser } from "../../../../lib/session";
-import {
-  getAccountByAccountNumber,
-  verifyUserAccountNumber,
-} from "../helpers";
+import { getAccountByAccountNumber, verifyUserAccountNumber } from "../helpers";
 import { POST } from "./route";
 
 function transferRequest(body: unknown) {
@@ -48,7 +45,7 @@ describe("POST /api/transactions/transfer", () => {
         amount: 10,
         senderAccountNumber: "11111111",
         recipientAccountNumber: "22222222",
-      })
+      }),
     );
 
     expect(res.status).toBe(401);
@@ -66,7 +63,7 @@ describe("POST /api/transactions/transfer", () => {
         amount: 10,
         senderAccountNumber: "11111111",
         recipientAccountNumber: "22222222",
-      })
+      }),
     );
     const body = await res.json();
 
@@ -86,16 +83,13 @@ describe("POST /api/transactions/transfer", () => {
         amount: 10,
         senderAccountNumber: "11111111",
         recipientAccountNumber: "22222222",
-      })
+      }),
     );
     const body = await res.json();
 
     expect(res.status).toBe(404);
     expect(body.error).toBe("No account found for user");
-    expect(verifyUserAccountNumber).toHaveBeenCalledWith(
-      "11111111",
-      "user-1"
-    );
+    expect(verifyUserAccountNumber).toHaveBeenCalledWith("11111111", "user-1");
   });
 
   it("rejects transferring to the sender's own account", async () => {
@@ -111,13 +105,13 @@ describe("POST /api/transactions/transfer", () => {
         amount: 10,
         senderAccountNumber: "11111111",
         recipientAccountNumber: "11111111",
-      })
+      }),
     );
     const body = await res.json();
 
     expect(res.status).toBe(400);
     expect(body.error).toBe(
-      "Cannot transfer to the same account. Select a different account"
+      "Cannot transfer to the same account. Select a different account",
     );
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
@@ -137,13 +131,13 @@ describe("POST /api/transactions/transfer", () => {
           amount,
           senderAccountNumber: "11111111",
           recipientAccountNumber: "22222222",
-        })
+        }),
       );
       const body = await res.json();
 
       expect(res.status).toBe(400);
       expect(body.error).toBe("Amount must be greater than 0");
-    }
+    },
   );
 
   it("rejects a transfer that exceeds the sender's balance", async () => {
@@ -160,7 +154,7 @@ describe("POST /api/transactions/transfer", () => {
         amount: 15,
         senderAccountNumber: "11111111",
         recipientAccountNumber: "22222222",
-      })
+      }),
     );
     const body = await res.json();
 
@@ -185,7 +179,7 @@ describe("POST /api/transactions/transfer", () => {
         reference: "Lunch",
         senderAccountNumber: "11111111",
         recipientAccountNumber: "22222222",
-      })
+      }),
     );
     const body = await res.json();
 
@@ -236,7 +230,7 @@ describe("POST /api/transactions/transfer", () => {
         amount: 15,
         senderAccountNumber: "11111111",
         recipientAccountNumber: "22222222",
-      })
+      }),
     );
 
     expect(prisma.transaction.create).toHaveBeenCalledWith({
@@ -254,14 +248,16 @@ describe("POST /api/transactions/transfer", () => {
       balance: 100,
     } as never);
     vi.mocked(prisma.$transaction).mockRejectedValue(dbError);
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
 
     const res = await POST(
       transferRequest({
         amount: 15,
         senderAccountNumber: "11111111",
         recipientAccountNumber: "22222222",
-      })
+      }),
     );
     const body = await res.json();
 
@@ -269,7 +265,7 @@ describe("POST /api/transactions/transfer", () => {
     expect(body.error).toBe("Could not process transfer");
     expect(consoleError).toHaveBeenCalledWith(
       "Failed to process transfer",
-      dbError
+      dbError,
     );
 
     consoleError.mockRestore();

@@ -4,51 +4,52 @@ import { TransactionType } from "../../../../lib/generated/prisma/enums";
 import { getAccountByAccountNumber, verifyUserAccountNumber } from "../helpers";
 
 export async function POST(req: Request) {
-
   const user = await getCurrentUser();
   if (!user) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const { amount, reference, senderAccountNumber, recipientAccountNumber } = await req.json();
+  const { amount, reference, senderAccountNumber, recipientAccountNumber } =
+    await req.json();
 
-  const recipient = await getAccountByAccountNumber(recipientAccountNumber)
-  const sender = await verifyUserAccountNumber(senderAccountNumber, user.id)
+  const recipient = await getAccountByAccountNumber(recipientAccountNumber);
+  const sender = await verifyUserAccountNumber(senderAccountNumber, user.id);
 
-  if(!recipient) {
+  if (!recipient) {
     return Response.json(
       { error: "No account found for recipient" },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
-  if(!sender) {
+  if (!sender) {
     return Response.json(
       { error: "No account found for user" },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
-  if(sender.id === recipient.id
-  ) {
+  if (sender.id === recipient.id) {
     return Response.json(
-      { error: "Cannot transfer to the same account. Select a different account" },
-      { status: 400 }
+      {
+        error:
+          "Cannot transfer to the same account. Select a different account",
+      },
+      { status: 400 },
     );
   }
 
-
-  if(!amount || amount <= 0) {
+  if (!amount || amount <= 0) {
     return Response.json(
-      { error: "Amount must be greater than 0"},
-      {status: 400 }
-    )
+      { error: "Amount must be greater than 0" },
+      { status: 400 },
+    );
   }
 
-  if(amount > sender.balance) {
+  if (amount > sender.balance) {
     return Response.json(
       { error: "Not enough funds to complete transfer" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -65,7 +66,7 @@ export async function POST(req: Request) {
           amount: -amount,
           reference: reference || "Transfer",
           type: TransactionType.TRANSFER,
-          counterpartyAccountNumber: recipientAccountNumber
+          counterpartyAccountNumber: recipientAccountNumber,
         },
       }),
 
@@ -80,18 +81,17 @@ export async function POST(req: Request) {
           amount: amount,
           reference: reference || "Transfer",
           type: TransactionType.TRANSFER,
-          counterpartyAccountNumber: senderAccountNumber
+          counterpartyAccountNumber: senderAccountNumber,
         },
       }),
     ]);
 
-    return Response.json({status: 200})
-
+    return Response.json({ status: 200 });
   } catch (error) {
     console.error("Failed to process transfer", error);
     return Response.json(
       { error: "Could not process transfer" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

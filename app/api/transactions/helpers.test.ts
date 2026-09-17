@@ -17,18 +17,18 @@ describe("getAccountByAccountNumber", () => {
   it("looks up an account by account number only, regardless of owner", async () => {
     vi.mocked(prisma.account.findUnique).mockResolvedValue({
       id: "account-1",
-      user: { id: "user-1", email: "a@b.com" },
+      user: { id: "user-1" },
     } as never);
 
     const result = await getAccountByAccountNumber("12345678");
 
     expect(prisma.account.findUnique).toHaveBeenCalledWith({
       where: { accountNumber: "12345678" },
-      select: { id: true, user: true },
+      select: { id: true, user: { select: { id: true } } },
     });
     expect(result).toEqual({
       id: "account-1",
-      user: { id: "user-1", email: "a@b.com" },
+      user: { id: "user-1" },
     });
   });
 
@@ -47,7 +47,6 @@ describe("verifyUserAccountNumber", () => {
   it("looks up an account scoped to both account number and owning user, including its balance", async () => {
     vi.mocked(prisma.account.findUnique).mockResolvedValue({
       id: "account-1",
-      user: { id: "user-1", email: "a@b.com" },
       balance: 100,
     } as never);
 
@@ -55,11 +54,10 @@ describe("verifyUserAccountNumber", () => {
 
     expect(prisma.account.findUnique).toHaveBeenCalledWith({
       where: { accountNumber: "12345678", userId: "user-1" },
-      select: { id: true, user: true, balance: true },
+      select: { id: true, balance: true },
     });
     expect(result).toEqual({
       id: "account-1",
-      user: { id: "user-1", email: "a@b.com" },
       balance: 100,
     });
   });
@@ -68,7 +66,7 @@ describe("verifyUserAccountNumber", () => {
     vi.mocked(prisma.account.findUnique).mockResolvedValue(null);
 
     await expect(
-      verifyUserAccountNumber("12345678", "someone-else")
+      verifyUserAccountNumber("12345678", "someone-else"),
     ).resolves.toBeNull();
   });
 });

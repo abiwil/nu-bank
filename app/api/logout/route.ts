@@ -1,4 +1,8 @@
-import { verifySession, destroySession, deleteSessionCookie } from "../../../lib/session";
+import {
+  verifySession,
+  destroySession,
+  deleteSessionCookie,
+} from "../../../lib/session";
 
 export async function POST() {
   const session = await verifySession();

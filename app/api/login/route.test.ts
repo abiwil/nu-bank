@@ -17,7 +17,7 @@ function fakeCookieStore() {
   const store = new Map<string, string>();
   return {
     get: vi.fn((name: string) =>
-      store.has(name) ? { value: store.get(name)! } : undefined
+      store.has(name) ? { value: store.get(name)! } : undefined,
     ),
     set: vi.fn((name: string, value: string) => {
       store.set(name, value);
@@ -43,7 +43,7 @@ describe("POST /api/login", () => {
     vi.clearAllMocks();
     cookieStore = fakeCookieStore();
     vi.mocked(cookies).mockResolvedValue(
-      cookieStore as unknown as Awaited<ReturnType<typeof cookies>>
+      cookieStore as unknown as Awaited<ReturnType<typeof cookies>>,
     );
   });
 
@@ -57,7 +57,9 @@ describe("POST /api/login", () => {
   it("rejects an unknown email with a generic 401, no cookie set", async () => {
     vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
 
-    const res = await POST(loginRequest({ email: "nobody@b.com", password: "whatever" }));
+    const res = await POST(
+      loginRequest({ email: "nobody@b.com", password: "whatever" }),
+    );
     const body = await res.json();
 
     expect(res.status).toBe(401);
@@ -73,7 +75,9 @@ describe("POST /api/login", () => {
       passwordHash,
     } as never);
 
-    const res = await POST(loginRequest({ email: "a@b.com", password: "wrong-password" }));
+    const res = await POST(
+      loginRequest({ email: "a@b.com", password: "wrong-password" }),
+    );
     const body = await res.json();
 
     expect(res.status).toBe(401);
@@ -90,7 +94,9 @@ describe("POST /api/login", () => {
     } as never);
     vi.mocked(prisma.session.create).mockResolvedValue({} as never);
 
-    const res = await POST(loginRequest({ email: "a@b.com", password: "correct-password" }));
+    const res = await POST(
+      loginRequest({ email: "a@b.com", password: "correct-password" }),
+    );
     const body = await res.json();
 
     expect(res.status).toBe(200);
@@ -106,7 +112,7 @@ describe("POST /api/login", () => {
     expect(cookieStore.set).toHaveBeenCalledWith(
       "session",
       expect.any(String),
-      expect.objectContaining({ httpOnly: true, sameSite: "lax" })
+      expect.objectContaining({ httpOnly: true, sameSite: "lax" }),
     );
   });
 });

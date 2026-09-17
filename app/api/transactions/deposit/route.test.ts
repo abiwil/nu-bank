@@ -57,20 +57,20 @@ describe("POST /api/transactions/deposit", () => {
     "rejects a non-positive amount (%s)",
     async (amount) => {
       const res = await POST(
-        depositRequest({ amount, accountNumber: "12345678" })
+        depositRequest({ amount, accountNumber: "12345678" }),
       );
       const body = await res.json();
 
       expect(res.status).toBe(400);
       expect(body.error).toBe("Amount must be greater than 0");
-    }
+    },
   );
 
   it("returns 404 when the account doesn't belong to the user", async () => {
     vi.mocked(verifyUserAccountNumber).mockResolvedValue(null);
 
     const res = await POST(
-      depositRequest({ amount: 10, accountNumber: "12345678" })
+      depositRequest({ amount: 10, accountNumber: "12345678" }),
     );
     const body = await res.json();
 
@@ -86,7 +86,11 @@ describe("POST /api/transactions/deposit", () => {
     vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
 
     const res = await POST(
-      depositRequest({ amount: 25, reference: "Payday", accountNumber: "12345678" })
+      depositRequest({
+        amount: 25,
+        reference: "Payday",
+        accountNumber: "12345678",
+      }),
     );
     const body = await res.json();
 
@@ -125,10 +129,12 @@ describe("POST /api/transactions/deposit", () => {
       id: "account-1",
     } as never);
     vi.mocked(prisma.$transaction).mockRejectedValue(dbError);
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
 
     const res = await POST(
-      depositRequest({ amount: 25, accountNumber: "12345678" })
+      depositRequest({ amount: 25, accountNumber: "12345678" }),
     );
     const body = await res.json();
 
@@ -136,7 +142,7 @@ describe("POST /api/transactions/deposit", () => {
     expect(body.error).toBe("Could not process deposit");
     expect(consoleError).toHaveBeenCalledWith(
       "Failed to process deposit",
-      dbError
+      dbError,
     );
 
     consoleError.mockRestore();
