@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { ArrowLeftRightIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -14,7 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   InputGroup,
@@ -23,8 +24,15 @@ import {
   InputGroupText,
 } from "@/components/ui/input-group"
 
-export function TransferDialog() {
+type TransferDialogProps = {
+  senderAccountNumber: string
+}
+
+export function TransferDialog({ senderAccountNumber }: TransferDialogProps) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string|null>(null)
   const [recipient, setRecipient] = useState("")
   const [amount, setAmount] = useState("")
   const [reference, setReference] = useState("")
@@ -38,9 +46,40 @@ export function TransferDialog() {
     }
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
-    handleOpenChange(false)
+    setError(null)
+
+    if (recipient === senderAccountNumber) {
+      setError("Oops you can't transfer money to your own account!")
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const res = await fetch("/api/transactions/transfer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount,
+          reference,
+          senderAccountNumber,
+          recipientAccountNumber: recipient,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        setError(data?.error ?? "Something went wrong")
+        return
+      }
+      handleOpenChange(false)
+      router.refresh()
+    } catch {
+      setError("Something went wrong")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -102,11 +141,12 @@ export function TransferDialog() {
               />
             </Field>
           </FieldGroup>
+          {error && <FieldError>{error}</FieldError>}
           <DialogFooter>
             <DialogClose render={<Button variant="outline" type="button" />}>
               Cancel
             </DialogClose>
-            <Button type="submit">Transfer</Button>
+            <Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Transferring" : "Transfer"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

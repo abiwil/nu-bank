@@ -1,7 +1,10 @@
 "use client"
 
 import { useState, type ReactNode } from "react"
+import { useRouter } from "next/navigation"
+import { ArrowDownToLineIcon, ArrowUpFromLineIcon } from "lucide-react"
 
+import { AmountDialogType } from "@/components/types/amount-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -13,7 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import {
   InputGroup,
   InputGroupAddon,
@@ -21,25 +24,50 @@ import {
   InputGroupText,
 } from "@/components/ui/input-group"
 
-type AmountDialogProps = {
-  id: string
-  triggerIcon: ReactNode
-  triggerLabel: string
-  title: string
-  description: string
-  submitLabel: string
+const CONFIG: Record<
+  AmountDialogType,
+  {
+    icon: ReactNode
+    triggerLabel: string
+    title: string
+    description: string
+    submitLabel: string
+    url: string
+  }
+> = {
+  [AmountDialogType.DEPOSIT]: {
+    icon: <ArrowDownToLineIcon data-icon="inline-start" />,
+    triggerLabel: "Deposit",
+    title: "Deposit funds",
+    description: "Add money to your account.",
+    submitLabel: "Deposit",
+    url: "/api/transactions/deposit",
+  },
+  [AmountDialogType.WITHDRAWAL]: {
+    icon: <ArrowUpFromLineIcon data-icon="inline-start" />,
+    triggerLabel: "Withdraw",
+    title: "Withdraw funds",
+    description: "Move money out of your account.",
+    submitLabel: "Withdraw",
+    url: "/api/transactions/withdraw",
+  },
 }
 
-export function AmountDialog({
-  id,
-  triggerIcon,
-  triggerLabel,
-  title,
-  description,
-  submitLabel,
-}: AmountDialogProps) {
+type AmountDialogProps = {
+  id: string
+  type: AmountDialogType
+  accountNumber: string
+}
+
+export function AmountDialog({ id, type, accountNumber }: AmountDialogProps) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string|null>(null)
+
+  const { icon, triggerLabel, title, description, submitLabel, url } =
+    CONFIG[type]
 
   function handleOpenChange(next: boolean) {
     setOpen(next)
@@ -48,15 +76,38 @@ export function AmountDialog({
     }
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
-    handleOpenChange(false)
+    setError(null)
+    setIsSubmitting(true)
+
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount,
+          accountNumber,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        setError(data?.error ?? "Something went wrong")
+        return
+      }
+      handleOpenChange(false)
+      router.refresh()
+    } catch {
+      setError("Something went wrong")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={<Button variant="outline" />}>
-        {triggerIcon}
+        {icon}
         {triggerLabel}
       </DialogTrigger>
       <DialogContent>
@@ -86,11 +137,14 @@ export function AmountDialog({
               </InputGroup>
             </Field>
           </FieldGroup>
+          {error && <FieldError>{error}</FieldError>}
           <DialogFooter>
             <DialogClose render={<Button variant="outline" type="button" />}>
               Cancel
             </DialogClose>
-            <Button type="submit">{submitLabel}</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? `${submitLabel}ing` : submitLabel}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
