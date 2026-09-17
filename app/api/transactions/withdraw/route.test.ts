@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { Decimal } from "../../../../lib/generated/prisma/internal/prismaNamespace";
+
 vi.mock("../../../../lib/prisma", () => ({
   prisma: {
     $transaction: vi.fn(),
@@ -93,6 +95,26 @@ describe("POST /api/transactions/withdraw", () => {
     expect(res.status).toBe(400);
     expect(body.error).toBe("Not enough funds to complete withdrawal");
     expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("allows a withdrawal within balance when amount and balance are string-like Decimals", async () => {
+    // Regression test: amount arrives as a string from the client, and
+    // Prisma's Decimal stringifies via valueOf(), so a naive `>` comparison
+    // between the two compares them lexicographically ("50" > "123.45")
+    // instead of numerically, wrongly rejecting valid withdrawals.
+    vi.mocked(verifyUserAccountNumber).mockResolvedValue({
+      id: "account-1",
+      balance: new Decimal("123.45"),
+    } as never);
+    vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
+
+    const res = await POST(
+      withdrawRequest({ amount: "50", accountNumber: "12345678" }),
+    );
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toEqual({ status: 200 });
   });
 
   it("debits the account and records a negative WITHDRAWAL transaction", async () => {

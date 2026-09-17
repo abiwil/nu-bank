@@ -9,8 +9,13 @@ export async function POST(req: Request) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const { amount, reference, senderAccountNumber, recipientAccountNumber } =
-    await req.json();
+  const {
+    amount: rawAmount,
+    reference,
+    senderAccountNumber,
+    recipientAccountNumber,
+  } = await req.json();
+  const amount = Number(rawAmount);
 
   const recipient = await getAccountByAccountNumber(recipientAccountNumber);
   const sender = await verifyUserAccountNumber(senderAccountNumber, user.id);
@@ -46,7 +51,7 @@ export async function POST(req: Request) {
     );
   }
 
-  if (amount > sender.balance) {
+  if (amount > Number(sender.balance)) {
     return Response.json(
       { error: "Not enough funds to complete transfer" },
       { status: 400 },

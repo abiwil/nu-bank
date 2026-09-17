@@ -9,7 +9,8 @@ export async function POST(req: Request) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const { amount, reference, accountNumber } = await req.json();
+  const { amount: rawAmount, reference, accountNumber } = await req.json();
+  const amount = Number(rawAmount);
 
   if (!accountNumber) {
     return Response.json({ error: "No account selected" }, { status: 400 });
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
     );
   }
 
-  if (amount > account.balance) {
+  if (amount > Number(account.balance)) {
     return Response.json(
       { error: "Not enough funds to complete withdrawal" },
       { status: 400 },

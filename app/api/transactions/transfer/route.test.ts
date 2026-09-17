@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { Decimal } from "../../../../lib/generated/prisma/internal/prismaNamespace";
+
 vi.mock("../../../../lib/prisma", () => ({
   prisma: {
     $transaction: vi.fn(),
@@ -161,6 +163,33 @@ describe("POST /api/transactions/transfer", () => {
     expect(res.status).toBe(400);
     expect(body.error).toBe("Not enough funds to complete transfer");
     expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("allows a transfer within balance when amount and balance are string-like Decimals", async () => {
+    // Regression test: amount arrives as a string from the client, and
+    // Prisma's Decimal stringifies via valueOf(), so a naive `>` comparison
+    // between the two compares them lexicographically ("50" > "123.45")
+    // instead of numerically, wrongly rejecting valid transfers.
+    vi.mocked(getAccountByAccountNumber).mockResolvedValue({
+      id: "recipient-1",
+    } as never);
+    vi.mocked(verifyUserAccountNumber).mockResolvedValue({
+      id: "sender-1",
+      balance: new Decimal("123.45"),
+    } as never);
+    vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
+
+    const res = await POST(
+      transferRequest({
+        amount: "50",
+        senderAccountNumber: "11111111",
+        recipientAccountNumber: "22222222",
+      }),
+    );
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toEqual({ status: 200 });
   });
 
   it("moves money out of the sender and into the recipient", async () => {
